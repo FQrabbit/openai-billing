@@ -336,6 +336,18 @@
       border: 1px solid #999;
       background-color: #fff;
     }
+    /* 定义排序的符号显示 */
+    .sorted-ascending::after {
+      content: "👇";
+      display: inline-block;
+      margin-left: 5px;
+}
+
+    .sorted-descending::after {
+      content: "👆";
+      display: inline-block;
+      margin-left: 5px;
+}
   </style>
 </head>
 
@@ -369,10 +381,10 @@
   <table id="result-table" style="visibility:hidden">
     <thead>
       <tr>
-        <th>API KEY</th>
-        <th style="width: 50px">总额度</th>
-        <th style="width: 50px">已使用</th>
-        <th style="width: 50px">剩余量</th>
+        <th><span class="sort-icon" data-column-index="0">API KEY</span></th>
+        <th style="width: 50px"><span class="sort-icon" sorted-ascending data-column-index="1">总额度-  <i class="sort-indicator"></i></span></th>
+        <th style="width: 50px"><span class="sort-icon" sorted-ascending data-column-index="2">已使用-  <i class="sort-indicator"></i></span></th>
+        <th style="width: 50px"><span class="sort-icon" sorted-ascending data-column-index="3">剩余量-  <i class="sort-indicator"></i></span></th>
         <th style="width: 60px">到期时间</th>
         <th style="width: 50px">GPT-4</th>
         <th style="width: 50px">是否绑卡</th>
@@ -381,12 +393,13 @@
     <tbody></tbody>
   </table>
   <footer>
-    <a href="https://github.com/ClarenceDan/openai-billing">👉前往 Github 查看源码或独立部署👈</a>
-    <br> <br>
+    <!--<a href="https://github.com/ClarenceDan/openai-billing">👉前往 Github 查看源码或独立部署👈</a>
+    <br> <br> 
     <a href="https://aivesa.com/">🍀体验免费直连的 Aivesa 助手🍀</a>
-    <p id="ipinfo"></p>
+    
     <script async src="https://umamis.zeabur.app/script.js"
-      data-website-id="ffe406f1-6867-4ee0-b14f-d3e9f73b09b7"></script>
+      data-website-id="ffe406f1-6867-4ee0-b14f-d3e9f73b09b7"></script>!-->
+      <p id="ipinfo"></p>
   </footer>
 
 
@@ -593,6 +606,72 @@
         customUrlInput.style.display = "none";
       }
     });
+
+    
+
+
+  // 获取表格元素和可点击的排序图标元素
+  let table = document.getElementById("result-table");
+  let sortIcons = table.getElementsByClassName("sort-icon");
+
+  // 将可点击的排序图标转换为数组以便于遍历
+  let sortIconArray = Array.from(sortIcons);
+
+  // 为每个可点击的排序图标添加点击事件监听器
+  sortIconArray.forEach((sortIcon) => {
+    sortIcon.addEventListener("click", () => {
+      let columnIndex = parseInt(sortIcon.getAttribute("data-column-index"), 10);
+      sortTable(columnIndex);
+
+      // 切换排序图标的样式
+      let sortIndicator = sortIcon.querySelector(".sort-indicator");
+      if (table.lastSortedColumnIndex === columnIndex) {
+        sortIndicator.classList.toggle("sorted-ascending", table.lastAscending);
+        sortIndicator.classList.toggle("sorted-descending", !table.lastAscending);
+      } else {
+        sortIndicator.classList.remove("sorted-ascending");
+        sortIndicator.classList.remove("sorted-descending");
+      }
+    });
+  });
+
+  function sortTable(columnIndex) {
+    let rows = Array.from(table.rows).slice(1); // 跳过第一行（表头行）
+    let shouldSort = true;
+    let ascending;
+
+    // 判断当前列是否正在排序
+    if (table.lastSortedColumnIndex === columnIndex) {
+      // 如果是同一列，切换升序/降序
+      ascending = !table.lastAscending;
+    } else {
+      // 如果是新的列，默认按升序排序
+      ascending = true;
+    }
+    table.lastAscending = ascending;
+    table.lastSortedColumnIndex = columnIndex;
+
+    // 使用自定义比较函数进行排序
+    rows.sort((rowA, rowB) => {
+      let cellA = rowA.cells[columnIndex].textContent;
+      let cellB = rowB.cells[columnIndex].textContent;
+
+      // 将文本内容转换为可比较的数字格式，忽略非数字字符
+      let valueA = parseFloat(cellA) || 0;
+      let valueB = parseFloat(cellB) || 0;
+
+      if (ascending) {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    });
+
+    // 更新表格行的排序顺序
+    rows.forEach((row, index) => {
+      table.tBodies[0].appendChild(row);
+    });
+  }
   </script>
 
   <script>
